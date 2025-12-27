@@ -1,0 +1,7 @@
+# Configuration globale par défaut
+message: "Configuration depuis Config Server"
+
+# Configuration commune pour tous les services
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
