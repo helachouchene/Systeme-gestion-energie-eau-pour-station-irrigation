@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.irrigation.energie.entity.ConsommationElectrique;
+import com.irrigation.energie.event.SurconsommationEvent;
+import com.irrigation.energie.kafka.KafkaProducerService;
 import com.irrigation.energie.repository.ConsommationElectriqueRepository;
 
 @Service
@@ -16,47 +18,55 @@ public class ConsommationElectriqueService {
     @Autowired
     private ConsommationElectriqueRepository consommationRepository;
     
-    // Seuil de surconsommation (en kWh)
+    @Autowired
+    private KafkaProducerService kafkaProducerService;
+    
     private static final Double SEUIL_SURCONSOMMATION = 10.0;
     
-    // Enregistrer une nouvelle consommation
     public ConsommationElectrique enregistrerConsommation(ConsommationElectrique consommation) {
         consommation.setDateMesure(LocalDateTime.now());
-        return consommationRepository.save(consommation);
+        ConsommationElectrique saved = consommationRepository.save(consommation);
+        
+        // Vérifier surconsommation et publier événement Kafka
+        if (isSurconsommation(saved.getEnergieUtilisee())) {
+            SurconsommationEvent event = new SurconsommationEvent(
+                saved.getPompeId(),
+                saved.getEnergieUtilisee(),
+                saved.getDateMesure(),
+                "⚠️ ALERTE : Surconsommation détectée sur la pompe " + saved.getPompeId() + 
+                " avec " + saved.getEnergieUtilisee() + " kWh"
+            );
+            kafkaProducerService.publierSurconsommation(event);
+        }
+        
+        return saved;
     }
     
-    // Récupérer toutes les consommations
     public List<ConsommationElectrique> getAllConsommations() {
         return consommationRepository.findAll();
     }
     
-    // Récupérer une consommation par ID
     public Optional<ConsommationElectrique> getConsommationById(Long id) {
         return consommationRepository.findById(id);
     }
     
-    // Récupérer les consommations d'une pompe
     public List<ConsommationElectrique> getConsommationsByPompe(Long pompeId) {
         return consommationRepository.findByPompeId(pompeId);
     }
     
-    // Calculer la consommation totale d'une pompe
     public Double calculerConsommationTotale(Long pompeId) {
         Double total = consommationRepository.calculerConsommationTotale(pompeId);
         return total != null ? total : 0.0;
     }
     
-    // Détecter les surconsommations
     public List<ConsommationElectrique> detecterSurconsommations() {
         return consommationRepository.findByEnergieUtiliseeGreaterThan(SEUIL_SURCONSOMMATION);
     }
     
-    // Vérifier si une consommation est excessive
     public boolean isSurconsommation(Double energieUtilisee) {
         return energieUtilisee > SEUIL_SURCONSOMMATION;
     }
     
-    // Récupérer les consommations entre deux dates
     public List<ConsommationElectrique> getConsommationsBetweenDates(LocalDateTime debut, LocalDateTime fin) {
         return consommationRepository.findByDateMesureBetween(debut, fin);
     }
