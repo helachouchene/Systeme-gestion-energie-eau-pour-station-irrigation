@@ -25,21 +25,18 @@ public class ReservoirController {
     @Autowired
     private ReservoirService reservoirService;
     
-    // Créer un nouveau réservoir
     @PostMapping
     public ResponseEntity<Reservoir> creerReservoir(@RequestBody Reservoir reservoir) {
         Reservoir nouveauReservoir = reservoirService.creerReservoir(reservoir);
         return new ResponseEntity<>(nouveauReservoir, HttpStatus.CREATED);
     }
     
-    // Récupérer tous les réservoirs
     @GetMapping
     public ResponseEntity<List<Reservoir>> getAllReservoirs() {
         List<Reservoir> reservoirs = reservoirService.getAllReservoirs();
         return ResponseEntity.ok(reservoirs);
     }
     
-    // Récupérer un réservoir par ID
     @GetMapping("/{id}")
     public ResponseEntity<Reservoir> getReservoirById(@PathVariable Long id) {
         return reservoirService.getReservoirById(id)
@@ -47,7 +44,6 @@ public class ReservoirController {
                 .orElse(ResponseEntity.notFound().build());
     }
     
-    // Mettre à jour un réservoir
     @PutMapping("/{id}")
     public ResponseEntity<Reservoir> updateReservoir(@PathVariable Long id, @RequestBody Reservoir reservoirDetails) {
         try {
@@ -58,14 +54,12 @@ public class ReservoirController {
         }
     }
     
-    // Supprimer un réservoir
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReservoir(@PathVariable Long id) {
         reservoirService.deleteReservoir(id);
         return ResponseEntity.noContent().build();
     }
     
-    // Mettre à jour le volume d'un réservoir
     @PutMapping("/{id}/volume")
     public ResponseEntity<Reservoir> updateVolume(@PathVariable Long id, @RequestParam Double volume) {
         try {
@@ -76,7 +70,6 @@ public class ReservoirController {
         }
     }
     
-    // Récupérer le niveau de remplissage d'un réservoir
     @GetMapping("/{id}/niveau")
     public ResponseEntity<Double> getNiveauRemplissage(@PathVariable Long id) {
         try {
@@ -87,24 +80,40 @@ public class ReservoirController {
         }
     }
     
-    // Récupérer les réservoirs par localisation
     @GetMapping("/localisation/{localisation}")
     public ResponseEntity<List<Reservoir>> getReservoirsByLocalisation(@PathVariable String localisation) {
         List<Reservoir> reservoirs = reservoirService.getReservoirsByLocalisation(localisation);
         return ResponseEntity.ok(reservoirs);
     }
     
-    // Récupérer les réservoirs avec niveau critique
     @GetMapping("/alertes/niveau-critique")
     public ResponseEntity<List<Reservoir>> getReservoirsNiveauCritique() {
         List<Reservoir> reservoirs = reservoirService.getReservoirsNiveauCritique();
         return ResponseEntity.ok(reservoirs);
     }
     
-    // Récupérer les réservoirs presque pleins
     @GetMapping("/alertes/presque-pleins")
     public ResponseEntity<List<Reservoir>> getReservoirsPresquePleins() {
         List<Reservoir> reservoirs = reservoirService.getReservoirsPresquePleins();
         return ResponseEntity.ok(reservoirs);
+    }
+    
+    @GetMapping("/test-pompe/{pompeId}")
+    public ResponseEntity<String> testCommunicationPompe(@PathVariable Long pompeId) {
+        boolean disponible = reservoirService.peutUtiliserPompe(pompeId);
+        if (disponible) {
+            return ResponseEntity.ok("✅ La pompe " + pompeId + " est DISPONIBLE");
+        } else {
+            return ResponseEntity.ok("❌ La pompe " + pompeId + " est INDISPONIBLE");
+        }
+    }
+    
+    @PostMapping("/{reservoirId}/remplir")
+    public ResponseEntity<String> remplirReservoir(
+            @PathVariable Long reservoirId, 
+            @RequestParam Long pompeId, 
+            @RequestParam Double volume) {
+        String resultat = reservoirService.remplirReservoir(reservoirId, pompeId, volume);
+        return ResponseEntity.ok(resultat);
     }
 }

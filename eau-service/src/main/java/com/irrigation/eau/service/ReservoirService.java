@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.irrigation.eau.client.EnergieClient;
 import com.irrigation.eau.entity.Reservoir;
 import com.irrigation.eau.repository.ReservoirRepository;
 
@@ -14,6 +15,9 @@ public class ReservoirService {
     
     @Autowired
     private ReservoirRepository reservoirRepository;
+    
+    @Autowired
+    private EnergieClient energieClient;
     
     // Créer un nouveau réservoir
     public Reservoir creerReservoir(Reservoir reservoir) {
@@ -86,5 +90,36 @@ public class ReservoirService {
             .orElseThrow(() -> new RuntimeException("Réservoir non trouvé avec l'id : " + id));
         
         return reservoir.isNiveauCritique();
+    }
+    
+    // NOUVELLE MÉTHODE : Vérifier si on peut utiliser une pompe
+    public boolean peutUtiliserPompe(Long pompeId) {
+        try {
+            Boolean disponible = energieClient.isPompeDisponible(pompeId);
+            return disponible != null && disponible;
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la communication avec le service Énergie : " + e.getMessage());
+            return false;
+        }
+    }
+    
+    // NOUVELLE MÉTHODE : Remplir un réservoir avec vérification de la pompe
+    public String remplirReservoir(Long reservoirId, Long pompeId, Double volume) {
+        Reservoir reservoir = reservoirRepository.findById(reservoirId)
+            .orElseThrow(() -> new RuntimeException("Réservoir non trouvé avec l'id : " + reservoirId));
+        
+        if (!peutUtiliserPompe(pompeId)) {
+            return "ERREUR : La pompe " + pompeId + " n'est pas disponible. Opération annulée.";
+        }
+        
+        Double nouveauVolume = reservoir.getVolumeActuel() + volume;
+        if (nouveauVolume > reservoir.getCapaciteTotale()) {
+            return "ERREUR : Dépassement de capacité. Capacité max : " + reservoir.getCapaciteTotale() + " m³";
+        }
+        
+        reservoir.setVolumeActuel(nouveauVolume);
+        reservoirRepository.save(reservoir);
+        
+        return "SUCCESS : Réservoir rempli. Nouveau volume : " + nouveauVolume + " m³ (" + reservoir.getNiveauRemplissage() + "%)";
     }
 }
