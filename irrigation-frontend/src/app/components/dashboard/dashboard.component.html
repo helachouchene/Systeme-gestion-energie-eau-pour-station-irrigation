@@ -1,0 +1,120 @@
+<div class="container mt-4">
+  <h1 class="mb-4">
+    <i class="bi bi-speedometer2"></i> Dashboard - Vue d'ensemble
+  </h1>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  <div *ngIf="!loading" class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-white bg-success">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-lightning-charge-fill"></i> Pompes Actives
+          </h5>
+          <h2>{{ pompesActives }} / {{ pompes.length }}</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-white bg-info">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-water"></i> Réservoirs
+          </h5>
+          <h2>{{ reservoirs.length }}</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-white bg-warning">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-exclamation-triangle-fill"></i> Alertes Critiques
+          </h5>
+          <h2>{{ reservoirsCritiques }}</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-white bg-danger">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-lightning-fill"></i> Surconsommations
+          </h5>
+          <h2>{{ surconsommations }}</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liste des pompes -->
+  <div *ngIf="!loading" class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0"><i class="bi bi-lightning-charge"></i> État des Pompes</h5>
+        </div>
+        <div class="card-body">
+          <div *ngIf="pompes.length === 0" class="text-muted">
+            Aucune pompe enregistrée
+          </div>
+          <div *ngFor="let pompe of pompes" class="mb-2">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <strong>{{ pompe.reference }}</strong>
+                <br>
+                <small class="text-muted">{{ pompe.puissance }} kW</small>
+              </div>
+              <span class="badge" 
+                    [ngClass]="{
+                      'bg-success': pompe.statut === 'ACTIF',
+                      'bg-secondary': pompe.statut === 'INACTIF',
+                      'bg-warning': pompe.statut === 'EN_MAINTENANCE'
+                    }">
+                {{ pompe.statut }}
+              </span>
+            </div>
+            <hr>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des réservoirs -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0"><i class="bi bi-water"></i> État des Réservoirs</h5>
+        </div>
+        <div class="card-body">
+          <div *ngIf="reservoirs.length === 0" class="text-muted">
+            Aucun réservoir enregistré
+          </div>
+          <div *ngFor="let reservoir of reservoirs" class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <strong>{{ reservoir.nom }}</strong>
+              <small>{{ reservoir.volumeActuel }} / {{ reservoir.capaciteTotale }} m³</small>
+            </div>
+            <div class="progress" style="height: 25px;">
+              <div class="progress-bar" 
+                   [ngClass]="getNiveauClass(getNiveauRemplissage(reservoir))"
+                   [style.width.%]="getNiveauRemplissage(reservoir)">
+                {{ getNiveauRemplissage(reservoir).toFixed(0) }}%
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
