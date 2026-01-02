@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: energie-service
+  namespace: irrigation
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: energie-service
+  template:
+    metadata:
+      labels:
+        app: energie-service
+    spec:
+      containers:
+      - name: energie-service
+        image: systeme-gestion-energie-eau-pour-station-irrigation-energie-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8081
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "docker"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://postgres-energie:5432/energiedb"
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secrets
+              key: POSTGRES_ENERGIE_USER
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secrets
+              key: POSTGRES_ENERGIE_PASSWORD
+        - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:9092"
+        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+          valueFrom:
+            configMapKeyRef:
+              name: eureka-config
+              key: EUREKA_SERVER_URL
