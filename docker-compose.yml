@@ -1,17 +1,60 @@
-version: '3.8'
-
 services:
+  # BASES DE DONNÉES
+  postgres-energie:
+    image: postgres:15-alpine
+    container_name: postgres-energie
+    environment:
+      POSTGRES_DB: energiedb
+      POSTGRES_USER: energie_user
+      POSTGRES_PASSWORD: energie_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_energie_data:/var/lib/postgresql/data
+    networks:
+      - irrigation-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U energie_user -d energiedb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  postgres-eau:
+    image: postgres:15-alpine
+    container_name: postgres-eau
+    environment:
+      POSTGRES_DB: eaudb
+      POSTGRES_USER: eau_user
+      POSTGRES_PASSWORD: eau_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_eau_data:/var/lib/postgresql/data
+    networks:
+      - irrigation-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eau_user -d eaudb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # KAFKA
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.4.0
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    networks:
+      - irrigation-network
+    restart: unless-stopped
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.0
     container_name: kafka
     depends_on:
       - zookeeper
@@ -20,6 +63,123 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - irrigation-network
+    restart: unless-stopped
+
+  # MICROSERVICES
+  discovery-server:
+    build:
+      context: ./discovery-server
+      dockerfile: Dockerfile
+    container_name: discovery-server
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - irrigation-network
+    restart: unless-stopped
+
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - discovery-server
+    networks:
+      - irrigation-network
+    restart: unless-stopped
+
+  gateway-service:
+    build:
+      context: ./gateway-service
+      dockerfile: Dockerfile
+    container_name: gateway-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - discovery-server
+      - config-server
+    networks:
+      - irrigation-network
+    restart: unless-stopped
+
+  energie-service:
+    build:
+      context: ./energie-service
+      dockerfile: Dockerfile
+    container_name: energie-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-energie:5432/energiedb
+      SPRING_DATASOURCE_USERNAME: energie_user
+      SPRING_DATASOURCE_PASSWORD: energie_pass
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - postgres-energie
+      - discovery-server
+      - kafka
+    networks:
+      - irrigation-network
+    restart: unless-stopped
+
+  eau-service:
+    build:
+      context: ./eau-service
+      dockerfile: Dockerfile
+    container_name: eau-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-eau:5432/eaudb
+      SPRING_DATASOURCE_USERNAME: eau_user
+      SPRING_DATASOURCE_PASSWORD: eau_pass
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - postgres-eau
+      - discovery-server
+      - kafka
+      - energie-service
+    networks:
+      - irrigation-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./irrigation-frontend
+      dockerfile: Dockerfile
+    container_name: irrigation-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - gateway-service
+    networks:
+      - irrigation-network
+    restart: unless-stopped
+
+networks:
+  irrigation-network:
+    driver: bridge
+    name: irrigation-network
+
+volumes:
+  postgres_energie_data:
+    name: postgres_energie_data
+  postgres_eau_data:
+    name: postgres_eau_data

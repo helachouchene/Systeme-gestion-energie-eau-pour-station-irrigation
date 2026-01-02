@@ -1,0 +1,64 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      routes:
+        - id: energie-service
+          uri: lb://ENERGIE-SERVICE
+          predicates:
+            - Path=/energie/**
+          filters:
+            - StripPrefix=1
+        - id: eau-service
+          uri: lb://EAU-SERVICE
+          predicates:
+            - Path=/eau/**
+          filters:
+            - StripPrefix=1
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins: "http://localhost:4200"
+            allowed-methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowed-headers: "*"
+            allow-credentials: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    hostname: gateway-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web: DEBUG

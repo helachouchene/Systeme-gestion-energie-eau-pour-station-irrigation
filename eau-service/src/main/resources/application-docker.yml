@@ -1,0 +1,65 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: eau-service
+  
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres-eau:5432/eaudb}
+    username: ${SPRING_DATASOURCE_USERNAME:eau_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:eau_pass}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
+    consumer:
+      group-id: eau-service-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.value.default.type: com.irrigation.eau.event.SurconsommationEvent
+      auto-offset-reset: earliest
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-server:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    hostname: eau-service
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Configuration Feign Client
+feign:
+  client:
+    config:
+      energie-service:
+        connect-timeout: 5000
+        read-timeout: 5000
+
+kafka:
+  topic:
+    surconsommation: surconsommation-events
