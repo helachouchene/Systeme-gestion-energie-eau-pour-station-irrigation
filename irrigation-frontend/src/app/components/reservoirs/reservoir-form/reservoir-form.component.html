@@ -1,0 +1,101 @@
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <i class="bi bi-droplet-fill"></i>
+            {{ isEditMode ? 'Modifier le Réservoir' : 'Ajouter un Réservoir' }}
+          </h4>
+        </div>
+        <div class="card-body">
+          <form (ngSubmit)="onSubmit()" #reservoirForm="ngForm">
+            
+            <!-- Nom -->
+            <div class="mb-3">
+              <label for="nom" class="form-label">
+                <i class="bi bi-tag"></i> Nom *
+              </label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="nom"
+                name="nom"
+                [(ngModel)]="reservoir.nom"
+                required
+                placeholder="Ex: Reservoir Est">
+            </div>
+
+            <!-- Localisation -->
+            <div class="mb-3">
+              <label for="localisation" class="form-label">
+                <i class="bi bi-geo-alt"></i> Localisation *
+              </label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="localisation"
+                name="localisation"
+                [(ngModel)]="reservoir.localisation"
+                required
+                placeholder="Ex: Zone A">
+            </div>
+
+            <!-- Capacité Totale -->
+            <div class="mb-3">
+              <label for="capaciteTotale" class="form-label">
+                <i class="bi bi-water"></i> Capacité Totale (Litres) *
+              </label>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="capaciteTotale"
+                name="capaciteTotale"
+                [(ngModel)]="reservoir.capaciteTotale"
+                required
+                min="0"
+                placeholder="Ex: 1200">
+            </div>
+
+            <!-- Volume Actuel -->
+            <div class="mb-3">
+              <label for="volumeActuel" class="form-label">
+                <i class="bi bi-speedometer"></i> Volume Actuel (Litres) *
+              </label>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="volumeActuel"
+                name="volumeActuel"
+                [(ngModel)]="reservoir.volumeActuel"
+                required
+                min="0"
+                [max]="reservoir.capaciteTotale"
+                placeholder="Ex: 950">
+              <small class="text-muted">Ne peut pas dépasser la capacité totale</small>
+            </div>
+
+            <!-- Boutons -->
+            <div class="d-flex gap-2 mt-4">
+              <button 
+                type="submit" 
+                class="btn btn-primary flex-fill"
+                [disabled]="!reservoirForm.valid || loading || reservoir.volumeActuel > reservoir.capaciteTotale">
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                <i class="bi bi-check-circle" *ngIf="!loading"></i>
+                {{ isEditMode ? 'Modifier' : 'Créer' }}
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-secondary flex-fill"
+                (click)="onCancel()"
+                [disabled]="loading">
+                <i class="bi bi-x-circle"></i> Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

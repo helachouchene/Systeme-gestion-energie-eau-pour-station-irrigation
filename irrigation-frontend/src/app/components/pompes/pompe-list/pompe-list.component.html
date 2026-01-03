@@ -1,1 +1,56 @@
-<p>pompe-list works!</p>
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-lightning-charge-fill text-success"></i> Gestion des Pompes</h2>
+    <a routerLink="/pompes/new" class="btn btn-success">
+      <i class="bi bi-plus-circle"></i> Ajouter une pompe
+    </a>
+  </div>
+
+  <div *ngIf="loading" class="text-center my-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+    <p class="mt-2 text-muted">Chargement des pompes...</p>
+  </div>
+
+  <div *ngIf="!loading && pompes.length === 0" class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Aucune pompe enregistrée
+  </div>
+
+  <div *ngIf="!loading && pompes.length > 0" class="row">
+    <div class="col-md-6 col-lg-4 mb-4" *ngFor="let pompe of pompes">
+      <div class="card h-100 shadow-sm hover-shadow">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-lightning-fill text-warning"></i>
+              {{ pompe.reference }}
+            </h5>
+            <span class="badge" [ngClass]="getStatusBadgeClass(pompe.statut)">
+              {{ pompe.statut }}
+            </span>
+          </div>
+          
+          <p class="card-text text-muted">
+            <i class="bi bi-speedometer2 text-info"></i> 
+            <strong>Puissance:</strong> {{ pompe.puissance }} kW
+          </p>
+          
+          <p class="card-text text-muted">
+            <i class="bi bi-calendar-check text-success"></i> 
+            <strong>Mise en service:</strong> {{ pompe.dateMiseEnService | date:'dd/MM/yyyy' }}
+          </p>
+          
+          <div class="btn-group w-100 mt-3" role="group">
+            <button class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-pencil"></i> Modifier
+            </button>
+            <button class="btn btn-sm btn-outline-danger" (click)="deletePompe(pompe.id!)">
+              <i class="bi bi-trash"></i> Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

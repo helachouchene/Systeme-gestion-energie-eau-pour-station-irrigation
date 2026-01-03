@@ -1,1 +1,76 @@
-<p>reservoir-list works!</p>
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-droplet-fill text-primary"></i> Gestion des Réservoirs</h2>
+    <a routerLink="/reservoirs/new" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Ajouter un réservoir
+    </a>
+  </div>
+
+  <div *ngIf="loading" class="text-center my-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+    <p class="mt-2 text-muted">Chargement des réservoirs...</p>
+  </div>
+
+  <div *ngIf="!loading && reservoirs.length === 0" class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Aucun réservoir enregistré
+  </div>
+
+  <div *ngIf="!loading && reservoirs.length > 0" class="row">
+    <div class="col-md-6 col-lg-4 mb-4" *ngFor="let reservoir of reservoirs">
+      <div class="card h-100 shadow-sm hover-shadow">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-water text-info"></i>
+              {{ reservoir.nom }}
+            </h5>
+            <span class="badge" [ngClass]="getProgressBarClass(getNiveauPercentage(reservoir))">
+              {{ getStatusText(getNiveauPercentage(reservoir)) }}
+            </span>
+          </div>
+          
+          <p class="card-text text-muted">
+            <i class="bi bi-geo-alt-fill text-primary"></i> 
+            <strong>Localisation:</strong> {{ reservoir.localisation }}
+          </p>
+          
+          <p class="card-text text-muted">
+            <i class="bi bi-water text-info"></i> 
+            <strong>Capacité Totale:</strong> {{ reservoir.capaciteTotale }} L
+          </p>
+          
+          <p class="card-text text-muted">
+            <i class="bi bi-speedometer text-success"></i> 
+            <strong>Volume Actuel:</strong> {{ reservoir.volumeActuel }} L
+          </p>
+          
+          <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <small class="text-muted">Remplissage</small>
+              <small class="fw-bold">{{ getNiveauPercentage(reservoir).toFixed(1) }}%</small>
+            </div>
+            <div class="progress" style="height: 25px;">
+              <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                   [ngClass]="getProgressBarClass(getNiveauPercentage(reservoir))"
+                   [style.width.%]="getNiveauPercentage(reservoir)"
+                   role="progressbar">
+                {{ getNiveauPercentage(reservoir).toFixed(0) }}%
+              </div>
+            </div>
+          </div>
+          
+          <div class="btn-group w-100 mt-3" role="group">
+            <button class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-pencil"></i> Modifier
+            </button>
+            <button class="btn btn-sm btn-outline-danger" (click)="deleteReservoir(reservoir.id!)">
+              <i class="bi bi-trash"></i> Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

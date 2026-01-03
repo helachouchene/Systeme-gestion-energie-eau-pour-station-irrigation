@@ -2,29 +2,29 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { PompeService } from '../../../services/pompe.service';
-import { Pompe } from '../../../models/pompe.model';
+import { ReservoirService } from '../../../services/reservoir.service';
+import { Reservoir } from '../../../models/reservoir.model';
 
 @Component({
-  selector: 'app-pompe-form',
+  selector: 'app-reservoir-form',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './pompe-form.component.html',
-  styleUrl: './pompe-form.component.css'
+  templateUrl: './reservoir-form.component.html',
+  styleUrl: './reservoir-form.component.css'
 })
-export class PompeFormComponent implements OnInit {
-  pompe: Pompe = {
-    reference: '',
-    puissance: 0,
-    statut: 'ACTIF',
-    dateMiseEnService: new Date().toISOString().split('T')[0]
+export class ReservoirFormComponent implements OnInit {
+  reservoir: Reservoir = {
+    nom: '',
+    capaciteTotale: 0,
+    volumeActuel: 0,
+    localisation: ''
   };
   
   isEditMode = false;
   loading = false;
 
   constructor(
-    private pompeService: PompeService,
+    private reservoirService: ReservoirService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -33,18 +33,18 @@ export class PompeFormComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode = true;
-      this.loadPompe(+id);
+      this.loadReservoir(+id);
     }
   }
 
-  loadPompe(id: number): void {
-    this.pompeService.getPompeById(id).subscribe({
+  loadReservoir(id: number): void {
+    this.reservoirService.getReservoirById(id).subscribe({
       next: (data) => {
-        this.pompe = data;
+        this.reservoir = data;
       },
       error: (err) => {
-        console.error('Erreur chargement pompe:', err);
-        alert('Erreur lors du chargement de la pompe');
+        console.error('Erreur chargement réservoir:', err);
+        alert('Erreur lors du chargement du réservoir');
       }
     });
   }
@@ -52,13 +52,13 @@ export class PompeFormComponent implements OnInit {
   onSubmit(): void {
     this.loading = true;
     
-    if (this.isEditMode && this.pompe.id) {
+    if (this.isEditMode && this.reservoir.id) {
       // Mise à jour
-      this.pompeService.updatePompe(this.pompe.id, this.pompe).subscribe({
+      this.reservoirService.updateReservoir(this.reservoir.id, this.reservoir).subscribe({
         next: () => {
           this.loading = false;
-          alert('Pompe modifiée avec succès !');
-          this.router.navigate(['/pompes']);
+          alert('Réservoir modifié avec succès !');
+          this.router.navigate(['/reservoirs']);
         },
         error: (err) => {
           this.loading = false;
@@ -68,11 +68,11 @@ export class PompeFormComponent implements OnInit {
       });
     } else {
       // Création
-      this.pompeService.createPompe(this.pompe).subscribe({
+      this.reservoirService.createReservoir(this.reservoir).subscribe({
         next: () => {
           this.loading = false;
-          alert('Pompe créée avec succès !');
-          this.router.navigate(['/pompes']);
+          alert('Réservoir créé avec succès !');
+          this.router.navigate(['/reservoirs']);
         },
         error: (err) => {
           this.loading = false;
@@ -84,6 +84,6 @@ export class PompeFormComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.router.navigate(['/pompes']);
+    this.router.navigate(['/reservoirs']);
   }
 }

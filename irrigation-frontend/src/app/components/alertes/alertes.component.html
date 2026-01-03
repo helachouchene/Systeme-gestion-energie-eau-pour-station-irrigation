@@ -1,1 +1,70 @@
-<p>alertes works!</p>
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-exclamation-triangle-fill text-warning"></i> Centre d'Alertes</h2>
+    <button class="btn btn-outline-secondary" (click)="loadAlertes()">
+      <i class="bi bi-arrow-clockwise"></i> Actualiser
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="text-center">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && alertes.length === 0" class="alert alert-success">
+    <i class="bi bi-check-circle-fill"></i> <strong>Aucune alerte en cours</strong> - Tous les systèmes fonctionnent normalement
+  </div>
+
+  <div *ngIf="!loading && alertes.length > 0" class="row">
+    <div class="col-12">
+      <div class="alert" 
+           [ngClass]="getAlertClass(alerte.severity)" 
+           *ngFor="let alerte of alertes"
+           role="alert">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5 class="alert-heading">
+              <i class="bi" [ngClass]="getAlertIcon(alerte.type)"></i>
+              {{ alerte.type === 'surconsommation' ? 'Alerte Énergie' : 'Alerte Eau' }}
+            </h5>
+            <p class="mb-1">{{ alerte.message }}</p>
+            <hr>
+            <p class="mb-0">
+              <small><i class="bi bi-clock"></i> {{ alerte.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}</small>
+            </p>
+          </div>
+          <button type="button" class="btn-close" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistiques des alertes -->
+  <div *ngIf="!loading && alertes.length > 0" class="row mt-4">
+    <div class="col-md-6">
+      <div class="card border-danger">
+        <div class="card-body text-center">
+          <h5 class="card-title text-danger">
+            <i class="bi bi-exclamation-octagon-fill"></i> Alertes Critiques
+          </h5>
+          <h2 class="text-danger">
+            {{ getAlertesCritiques() }}
+          </h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-warning">
+        <div class="card-body text-center">
+          <h5 class="card-title text-warning">
+            <i class="bi bi-exclamation-triangle-fill"></i> Avertissements
+          </h5>
+          <h2 class="text-warning">
+            {{ getAlertesWarning() }}
+          </h2>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,1 +1,100 @@
-<p>pompe-form works!</p>
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow">
+        <div class="card-header bg-success text-white">
+          <h4 class="mb-0">
+            <i class="bi bi-lightning-charge-fill"></i>
+            {{ isEditMode ? 'Modifier la Pompe' : 'Ajouter une Pompe' }}
+          </h4>
+        </div>
+        <div class="card-body">
+          <form (ngSubmit)="onSubmit()" #pompeForm="ngForm">
+            
+            <!-- Référence -->
+            <div class="mb-3">
+              <label for="reference" class="form-label">
+                <i class="bi bi-tag"></i> Référence *
+              </label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="reference"
+                name="reference"
+                [(ngModel)]="pompe.reference"
+                required
+                placeholder="Ex: POMPE-WEB-001">
+            </div>
+
+            <!-- Puissance -->
+            <div class="mb-3">
+              <label for="puissance" class="form-label">
+                <i class="bi bi-speedometer2"></i> Puissance (kW) *
+              </label>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="puissance"
+                name="puissance"
+                [(ngModel)]="pompe.puissance"
+                required
+                min="0"
+                step="0.1"
+                placeholder="Ex: 15">
+            </div>
+
+            <!-- Statut -->
+            <div class="mb-3">
+              <label for="statut" class="form-label">
+                <i class="bi bi-info-circle"></i> Statut *
+              </label>
+              <select 
+                class="form-select" 
+                id="statut"
+                name="statut"
+                [(ngModel)]="pompe.statut"
+                required>
+                <option value="ACTIF">ACTIF</option>
+                <option value="INACTIF">INACTIF</option>
+                <option value="EN_MAINTENANCE">EN MAINTENANCE</option>
+              </select>
+            </div>
+
+            <!-- Date de mise en service -->
+            <div class="mb-3">
+              <label for="dateMiseEnService" class="form-label">
+                <i class="bi bi-calendar-check"></i> Date de mise en service *
+              </label>
+              <input 
+                type="date" 
+                class="form-control" 
+                id="dateMiseEnService"
+                name="dateMiseEnService"
+                [(ngModel)]="pompe.dateMiseEnService"
+                required>
+            </div>
+
+            <!-- Boutons -->
+            <div class="d-flex gap-2 mt-4">
+              <button 
+                type="submit" 
+                class="btn btn-success flex-fill"
+                [disabled]="!pompeForm.valid || loading">
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                <i class="bi bi-check-circle" *ngIf="!loading"></i>
+                {{ isEditMode ? 'Modifier' : 'Créer' }}
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-secondary flex-fill"
+                (click)="onCancel()"
+                [disabled]="loading">
+                <i class="bi bi-x-circle"></i> Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
