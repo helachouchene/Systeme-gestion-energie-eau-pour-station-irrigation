@@ -1,4 +1,0 @@
-@echo off
-echo 🛑 Arrêt du système...
-docker-compose down
-echo ✅ Système arrêté.
